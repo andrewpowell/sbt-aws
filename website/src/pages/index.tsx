@@ -5,32 +5,51 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import HomepageFeatures from '@site/src/components/HomepageFeatures';
 import Heading from '@theme/Heading';
-import ReactPlayer from 'react-player';
+// Removed ReactPlayer to comply with privacy regulations and prevent unauthorized cookie installation
 import styles from './index.module.css';
 
-function VideoPlayer({ url }) {
+function VideoThumbnail({ url, title, description }) {
+  // Extract YouTube video ID from URL
+  const getYouTubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const videoId = getYouTubeId(url);
+  const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
+
+  const handleClick = () => {
+    // Open YouTube in new tab - no iframes, no cookies, no tracking on our site
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      <ReactPlayer
-        url={url}
-        controls
-        width="100%"
-        config={{
-          youtube: {
-            playerVars: {
-              // Enhanced sandbox settings for security compliance
-              sandbox: 'allow-scripts allow-same-origin allow-presentation allow-forms',
-              // Additional security settings
-              origin: typeof window !== 'undefined' ? window.location.origin : '',
-              enablejsapi: 0,
-              rel: 0,
-              modestbranding: 1,
-              // Disable cookies and tracking
-              'privacy-enhanced': 1
-            }
-          }
-        }}
+    <div 
+      className={styles.videoThumbnail}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-label={`Play video: ${title}`}
+    >
+      <img 
+        src={thumbnailUrl} 
+        alt={`${title} video thumbnail`}
+        className={styles.thumbnailImage}
       />
+      <div className={styles.playButton} aria-hidden="true">▶</div>
+      <div className={styles.videoInfo}>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
     </div>
   );
 }
@@ -66,8 +85,16 @@ function HomepageHeader() {
         <div className={styles.videoGrid}>
           <h2 className={styles.videoHeading}>Watch and Learn</h2>
           <div className={styles.videoRow}>
-            <VideoPlayer url={videos[0].url} />
-            <VideoPlayer url={videos[1].url} />
+            <VideoThumbnail 
+              url={videos[0].url} 
+              title={videos[0].title}
+              description={videos[0].description}
+            />
+            <VideoThumbnail 
+              url={videos[1].url} 
+              title={videos[1].title}
+              description={videos[1].description}
+            />
           </div>
         </div>
 
